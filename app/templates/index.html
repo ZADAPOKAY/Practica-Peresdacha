@@ -1,0 +1,75 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Access-логи</title>
+<style>
+body{font-family:sans-serif;margin:20px}
+input,select,button{padding:6px;margin:2px}
+table{border-collapse:collapse;margin-top:10px;width:100%}
+td,th{border:1px solid #ccc;padding:4px 8px;text-align:left;font-size:14px}
+tr.row:hover{background:#eef;cursor:pointer}
+.err{color:#b00;font-weight:bold}.ok{color:#070}
+#detail{margin-top:10px;padding:10px;background:#f6f6f6;white-space:pre-wrap}
+</style></head><body>
+<h2>Access-логи Apache <small style="font-size:14px">({{ user }} · <a href="/logout">выйти</a>)</small></h2>
+<div>
+ От <input id="from" placeholder="2026-05-10"> До <input id="to" placeholder="2026-05-12">
+ IP <input id="ip" size="12"> Ключевое слово (URL) <input id="kw" size="14">
+ Группировка <select id="gb"><option value="">нет</option><option value="ip">по IP</option><option value="date">по дате</option></select>
+ <button onclick="load()">Показать</button>
+ <button onclick="parseNow()">Разобрать логи сейчас</button>
+</div>
+<div id="status"></div>
+<div id="result"></div>
+<div id="detail" hidden></div>
+<script>
+let items=[];
+const st=(t,c)=>{const e=document.getElementById('status');e.textContent=t;e.className=c||''};
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function api(url,opts){
+  let r;
+  try{r=await fetch(url,opts)}catch(e){throw new Error('Нет связи с сервером')}
+  if(r.status===401){location='/login';throw new Error('Нужна авторизация')}
+  const text=await r.text();
+  const data=JSON.parse(text||'{}');
+  if(!r.ok)throw new Error(data.error||('Ошибка '+r.status));
+  return {data,bytes:text.length};
+}
+
+async function load(){
+  const p=new URLSearchParams({from:from.value,to:to.value,ip:ip.value,keyword:kw.value,group_by:gb.value});
+  st('Загрузка…');detail.hidden=true;
+  try{
+    const {data,bytes}=await api('/api/logs?'+p);
+    items=data.items;
+    st(`Загружено записей: ${data.count}, размер ответа: ${(bytes/1024).toFixed(1)} КБ`,'ok');
+    render();
+  }catch(e){st(e.message,'err');result.innerHTML=''}
+}
+
+function render(){
+  if(!items.length){result.innerHTML='<p>Ничего не найдено</p>';return}
+  let h='<table>';
+  if(gb.value){
+    h+=`<tr><th>${gb.value==='ip'?'IP':'Дата'}</th><th>Запросов</th><th>Байт</th></tr>`;
+    items.forEach(r=>h+=`<tr><td>${esc(r.key)}</td><td>${r.requests}</td><td>${r.bytes}</td></tr>`);
+  }else{
+    h+='<tr><th>Время (UTC)</th><th>IP</th><th>Метод</th><th>URL</th><th>Статус</th><th>Размер</th></tr>';
+    items.forEach((r,i)=>h+=`<tr class="row" onclick="show(${i})"><td>${esc(r.time)}</td><td>${esc(r.ip)}</td><td>${esc(r.method)}</td><td>${esc(r.url)}</td><td>${r.status}</td><td>${r.size}</td></tr>`);
+  }
+  result.innerHTML=h+'</table>';
+}
+
+function show(i){
+  const r=items[i];detail.hidden=false;
+  detail.textContent=Object.entries(r).map(([k,v])=>k+': '+(v??'-')).join('\n');
+}
+
+async function parseNow(){
+  st('Идёт разбор логов…');
+  try{
+    const {data}=await api('/api/parse',{method:'POST'});
+    let t=`Файлов: ${data.files}, строк: ${data.lines}, добавлено: ${data.inserted}, битых: ${data.bad}`;
+    if(data.errors.length)t+=' | '+data.errors.join('; ');
+    st(t,data.errors.length?'err':'ok');
+  }catch(e){st(e.message,'err')}
+}
+</script></body></html>
