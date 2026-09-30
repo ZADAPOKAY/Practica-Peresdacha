@@ -1,0 +1,6 @@
+192.168.1.10 - - [10/May/2026:13:55:36 +0000] "GET /index.html HTTP/1.1" 200 2326 "http://example.com/" "Mozilla/5.0"
+192.168.1.10 - - [10/May/2026:13:56:01 +0000] "GET /about.html HTTP/1.1" 200 1500 "-" "Mozilla/5.0"
+10.0.0.5 - bob [11/May/2026:09:10:11 +0000] "POST /login HTTP/1.1" 302 - "-" "curl/8.0"
+10.0.0.5 - - [11/May/2026:09:10:20 +0000] "GET /missing HTTP/1.1" 404 512 "-" "curl/8.0"
+172.16.0.7 - - [12/May/2026:18:00:00 +0200] "GET /api/data HTTP/1.1" 500 128
+this line is broken and will be logged as an error
