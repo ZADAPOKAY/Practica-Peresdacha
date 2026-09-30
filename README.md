@@ -5,7 +5,7 @@
 
 ## Что понадобится
 - Python 3.10+
-- Docker (для MySQL) — или свой MySQL 8 (тогда пропустите шаг 2 и поправьте `config.yaml`)
+- Docker (для MySQL) 
 
 ## Запуск
 
