@@ -1,0 +1,18 @@
+# Настройки приложения
+database:
+  host: 127.0.0.1
+  port: 3306
+  user: loguser
+  password: logpass
+  name: logs
+
+logs:
+  dir: ./logs_sample        # папка с access-логами Apache
+  mask: "access.log*"       # маска файлов
+
+web:
+  host: 127.0.0.1
+  port: 5000
+  secret_key: "change-me-please"   # секрет для сессий, поменяйте
+
+errors_log: ./parse_errors.log      # сюда пишутся строки, которые не удалось разобрать
