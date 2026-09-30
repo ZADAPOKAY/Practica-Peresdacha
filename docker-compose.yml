@@ -1,0 +1,16 @@
+# Поднимает только MySQL. Само приложение запускается обычным python.
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: logs
+      MYSQL_USER: loguser
+      MYSQL_PASSWORD: logpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+volumes:
+  dbdata:
